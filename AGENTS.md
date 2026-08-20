@@ -102,3 +102,14 @@ A feature is complete only if:
 5. All Feature & Unit tests are passing successfully.
 6. The codebase passes static analysis and formatting tests (`pint`).
 7. Changes are logged incrementally via structured, meaningful Git commits.
+
+---
+
+## 9. Database Rules
+- **Database Engine**: PostgreSQL 17 for production environments; SQLite (in-memory) for testing.
+- **ID Strategy**: Universally Unique Identifiers (UUIDv4) for all primary and foreign key columns. Incrementing integer IDs are prohibited except for default system tools (e.g. personal access tokens).
+- **Naming Convention**: `snake_case` for table names (pluralized, e.g. `projects`) and column names; singular `PascalCase` for model classes (e.g. `Project`).
+- **Relationship Convention**: Define clean Eloquent relation methods. Relationships linking to soft-deletable models (such as `User`) must chain `->withTrashed()` to prevent NPE crashes in history, logs, or details serialization.
+- **Migration Convention**: All migrations must be reversible. Foreign key constraints must have explicit indexes and appropriate cascading actions (e.g. `cascadeOnDelete()`).
+- **Constraint Policy**: Enforce constraints (nullability, uniqueness, foreign keys) at the database layer while validating requests in Form Requests.
+- **Prohibited Destructive Migration**: Do not run destructive database actions (e.g., raw table drops or modifications of existing columns) on production schemas. Use migrations to add fields or modify constraints safely.

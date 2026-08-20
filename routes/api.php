@@ -22,6 +22,9 @@ Route::prefix('v1')->group(function () {
         // Dashboard statistics
         Route::get('dashboard', [DashboardController::class, 'index']);
 
+        // Project CSV Export
+        Route::get('projects/export', [ProjectController::class, 'export']);
+
         // Project CRUD
         Route::apiResource('projects', ProjectController::class);
 
