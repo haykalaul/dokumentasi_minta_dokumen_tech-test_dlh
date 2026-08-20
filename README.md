@@ -142,7 +142,3 @@ php artisan test
 ```
 
 ---
-
-## 8. AI Assistance Disclosure
-
-Pengembangan prototype sistem ini diasisteni oleh **Antigravity (AI Coding Assistant)** dari Google DeepMind team, mengikuti standar PSR-12, modern PHP 8.2+, Clean Architecture, dan database normalization PostgreSQL.
