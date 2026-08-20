@@ -142,3 +142,19 @@ php artisan test
 ```
 
 ---
+
+## 8. CI/CD & Gemini AI Code Reviewer
+
+Aplikasi ini dilengkapi dengan pipeline CI/CD menggunakan **GitHub Actions** ([ci.yml](file:///.github/workflows/ci.yml)) yang melakukan pengecekan kualitas kode otomatis menggunakan **Gemini AI Collaborator**:
+
+1. **Pipeline Alur Kerja**:
+   - Menjalankan static analysis formatting check via `vendor/bin/pint --test`.
+   - Mengompilasi frontend bundle dengan `npm run build`.
+   - Menjalankan test suite PHPUnit via `php artisan test`.
+   - Memicu script audit `scripts/gemini-reviewer.js`.
+2. **Gemini AI Code Auditor** ([gemini-reviewer.js](file:///scripts/gemini-reviewer.js)):
+   - Membaca git diff dari commit terbaru.
+   - Mengirim diff ke Gemini API (`gemini-1.5-flash`) untuk diulas secara real-time.
+   - AI meninjau kualitas kode, kesesuaian arsitektur, potensi bug, dan celah keamanan (seperti SQLi, IDOR, dll.).
+   - Jika ditemukan masalah kritis, AI memberi tag `[CRITICAL]` yang memicu status build **FAIL** (exit code 1) untuk mencegah kode bermasalah digabungkan (*merge*) ke cabang utama.
+   - Konfigurasikan token rahasia `GEMINI_API_KEY` pada repositori GitHub Secrets untuk mengaktifkan fitur ini.
