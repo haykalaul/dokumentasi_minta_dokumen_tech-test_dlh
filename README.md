@@ -1,66 +1,148 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Government Document Eligibility System - DLH
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Sistem Pendokumentasian Permohonan Dokumen Kelayakan Lingkungan Hidup Dinas Lingkungan Hidup (DLH).
 
-## About Laravel
+Project ini merupakan prototype sistem pengajuan kelayakan dokumen berskala enterprise, aman, dan berkinerja tinggi.
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+---
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## 1. Stack Teknologi
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+- **Backend**: Laravel 12.x, PHP 8.2+
+- **Frontend**: Vue 3 (Composition API `<script setup>`), Pinia (State Management), Vue Router
+- **Database**: PostgreSQL 17
+- **Caching & Queue**: Redis 8
+- **Styling**: Tailwind CSS v4.0
 
-## Learning Laravel
+---
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+## 2. Fitur Utama
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+1. **Autentikasi Multi-Peran**: Pemohon (`applicant`) dan Penilai (`reviewer`) terintegrasi menggunakan Laravel Sanctum & Spatie Laravel Permission.
+2. **State-Machine Workflow**:
+   - Status: `draft` -> `submitted` -> `under_review` -> (`revision_required` -> `submitted`) ATAU `approved` / `rejected`.
+   - Transisi status terisolasi secara transaksional di level service.
+3. **Upload Dokumen Aman**:
+   - Disimpan di private storage (`storage/app/private`).
+   - Validasi MIME-type asli via `finfo` (binary signature check).
+   - UUID filename generation untuk mencegah penyingkapan data sensitif.
+4. **Dashboard Evaluasi**:
+   - Agregasi data dengan sub-query SQL optimal (single-query count).
+   - Redis caching selama 300 detik dengan invalidasi otomatis (bust) saat transisi status.
+   - Monthly submission trend chart (ApexCharts) untuk penilai.
+5. **Audit Log & Timeline**: Setiap perubahan status dan catatan dicatat secara kronologis.
+6. **Optimasi Performa**:
+   - Database indexing pada foreign keys, status, created_at, dan composite index `(user_id, status)`.
+   - Menggunakan cursor pagination (`cursorPaginate()`) untuk menghindari degradasi query pada deep page.
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+---
 
-## Laravel Sponsors
+## 3. Akun Demo Uji Coba
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+Gunakan kredensial berikut untuk masuk ke sistem:
 
-### Premium Partners
+- **Pemohon (Applicant)**:
+  - Email: `applicant@example.com`
+  - Password: `password`
+- **Penilai (Reviewer)**:
+  - Email: `reviewer@example.com`
+  - Password: `password`
 
-- **[Vehikl](https://vehikl.com/)**
-- **[Tighten Co.](https://tighten.co)**
-- **[WebReinvent](https://webreinvent.com/)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel/)**
-- **[Cyber-Duck](https://cyber-duck.co.uk)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Jump24](https://jump24.co.uk)**
-- **[Redberry](https://redberry.international/laravel/)**
-- **[Active Logic](https://activelogic.com)**
-- **[byte5](https://byte5.de)**
-- **[OP.GG](https://op.gg)**
+---
 
-## Contributing
+## 4. Cara Instalasi & Setup
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+### Prasyarat
+- PHP 8.2 atau lebih tinggi
+- Composer
+- Node.js & npm
+- Docker (untuk PostgreSQL & Redis)
 
-## Code of Conduct
+### Langkah 1: Kloning & Install Dependensi
+```bash
+# Install PHP dependencies
+composer install
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+# Install Javascript dependencies
+npm install --legacy-peer-deps
+```
 
-## Security Vulnerabilities
+### Langkah 2: Konfigurasi Environment (`.env`)
+Salin berkas `.env.example` ke `.env` dan sesuaikan koneksi database PostgreSQL & Redis:
+```ini
+DB_CONNECTION=pgsql
+DB_HOST=127.0.0.1
+DB_PORT=5432
+DB_DATABASE=app
+DB_USERNAME=postgres
+DB_PASSWORD=postgres
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+CACHE_STORE=redis
+REDIS_HOST=127.0.0.1
+REDIS_PORT=6379
+```
 
-## License
+### Langkah 3: Migrasi & Database Seeder (10k Data Uji)
+Jalankan migrasi fresh beserta seeder untuk men-generate data uji (10.000 project, 1.000 applicant, 1.000 reviewer):
+```bash
+php artisan migrate:fresh --seed
+```
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+### Langkah 4: Menjalankan Server Aplikasi
+Jalankan server Laravel backend dan Vite frontend secara paralel:
+```bash
+# Menjalankan backend server & frontend build watcher
+npm run dev
+```
+
+---
+
+## 5. Dokumentasi API (v1)
+
+Semua endpoint dilindungi Bearer Token Sanctum:
+
+| Method | Endpoint | Peran | Deskripsi |
+|---|---|---|---|
+| `POST` | `/api/v1/auth/register` | Public | Pendaftaran akun applicant baru |
+| `POST` | `/api/v1/auth/login` | Public | Login dan generate API Token |
+| `POST` | `/api/v1/auth/logout` | Auth | Menghapus token saat ini |
+| `GET` | `/api/v1/auth/me` | Auth | Mengambil profil user aktif |
+| `GET` | `/api/v1/dashboard` | Auth | Mendapatkan agregasi metrics dashboard |
+| `GET` | `/api/v1/projects` | Auth | Mendapatkan daftar projects (cursor paginated) |
+| `POST` | `/api/v1/projects` | Applicant | Membuat permohonan baru + upload file |
+| `GET` | `/api/v1/projects/{project}` | Auth | Melihat rincian permohonan & history logs |
+| `PUT` | `/api/v1/projects/{project}` | Applicant | Memperbaiki permohonan (status draft/revision) |
+| `DELETE` | `/api/v1/projects/{project}` | Applicant | Menghapus permohonan (hanya status draft) |
+| `GET` | `/api/v1/projects/{project}/documents/{document}` | Auth | Mengunduh file berkas secara aman |
+| `GET` | `/api/v1/projects/{project}/history` | Auth | Melihat riwayat approval log kronologis |
+| `POST` | `/api/v1/projects/{project}/submit` | Applicant | Mengirim permohonan ke penilai |
+| `POST` | `/api/v1/projects/{project}/reviews` | Reviewer | Mulai meninjau permohonan |
+| `POST` | `/api/v1/projects/{project}/revision` | Reviewer | Meminta revisi dengan catatan perbaikan |
+| `POST` | `/api/v1/projects/{project}/approve` | Reviewer | Menyetujui dokumen kelayakan |
+| `POST` | `/api/v1/projects/{project}/reject` | Reviewer | Menolak dokumen kelayakan |
+
+---
+
+## 6. Struktur Database (ERD Concept)
+
+- **users**: `id` (UUID, PK), `name`, `email`, `password`, `created_at`, `updated_at`, `deleted_at`.
+- **projects**: `id` (UUID, PK), `user_id` (UUID, FK -> users), `title`, `description`, `status` (indexed), `created_at` (indexed), `updated_at`.
+- **documents**: `id` (UUID, PK), `project_id` (UUID, FK -> projects), `filename`, `original_name`, `file_path`, `file_size`, `mime_type`, `created_at`, `updated_at`.
+- **approval_logs**: `id` (UUID, PK), `project_id` (UUID, FK -> projects), `user_id` (UUID, FK -> users), `action`, `old_status`, `new_status`, `notes`, `created_at` (indexed).
+
+---
+
+## 7. Pengujian (Testing)
+
+Sistem dilengkapi dengan feature testing komprehensif (17 test cases, 50 assertions) yang menguji seluruh alur autentikasi, IDOR prevention, state transitions, upload validation, dan audit logs.
+
+Jalankan pengujian:
+```bash
+php artisan test
+```
+
+---
+
+## 8. AI Assistance Disclosure
+
+Pengembangan prototype sistem ini diasisteni oleh **Antigravity (AI Coding Assistant)** dari Google DeepMind team, mengikuti standar PSR-12, modern PHP 8.2+, Clean Architecture, dan database normalization PostgreSQL.
