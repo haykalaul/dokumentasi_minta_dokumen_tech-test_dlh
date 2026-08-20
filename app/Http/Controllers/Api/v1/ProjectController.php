@@ -56,6 +56,63 @@ class ProjectController extends Controller
     }
 
     /**
+     * Export projects to CSV for Reviewers.
+     */
+    public function export(Request $request): StreamedResponse
+    {
+        $this->authorize('export', Project::class);
+
+        $query = Project::query()->with('user')->where('status', '!=', 'draft');
+
+        if ($request->has('status')) {
+            $query->where('status', $request->query('status'));
+        }
+        if ($request->has('search')) {
+            $query->where('title', 'like', '%'.$request->query('search').'%');
+        }
+
+        $query->orderBy('created_at', 'desc');
+
+        $headers = [
+            'Content-Type' => 'text/csv',
+            'Content-Disposition' => 'attachment; filename="permohonan_kelayakan_export.csv"',
+        ];
+
+        return response()->stream(function () use ($query) {
+            $handle = fopen('php://output', 'w');
+
+            // Add BOM for Excel compatibility in UTF-8
+            fprintf($handle, chr(0xEF).chr(0xBB).chr(0xBF));
+
+            // Header row
+            fputcsv($handle, [
+                'ID',
+                'Judul Permohonan',
+                'Deskripsi',
+                'Status',
+                'Nama Pemohon',
+                'Email Pemohon',
+                'Tanggal Diajukan',
+            ]);
+
+            // Stream data in chunks using cursor
+            foreach ($query->cursor() as $project) {
+                fputcsv($handle, [
+                    $project->id,
+                    $project->title,
+                    $project->description,
+                    $project->status,
+                    $project->user?->name ?? 'Deleted User',
+                    $project->user?->email ?? 'deleted@example.com',
+                    $project->created_at ? $project->created_at->toIso8601String() : '',
+                ]);
+            }
+
+            fclose($handle);
+        }, 200, $headers);
+    }
+
+    /**
      * Store a newly created project application.
      */
     public function store(ProjectCreateRequest $request): JsonResponse

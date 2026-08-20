@@ -113,3 +113,28 @@ A feature is complete only if:
 - **Migration Convention**: All migrations must be reversible. Foreign key constraints must have explicit indexes and appropriate cascading actions (e.g. `cascadeOnDelete()`).
 - **Constraint Policy**: Enforce constraints (nullability, uniqueness, foreign keys) at the database layer while validating requests in Form Requests.
 - **Prohibited Destructive Migration**: Do not run destructive database actions (e.g., raw table drops or modifications of existing columns) on production schemas. Use migrations to add fields or modify constraints safely.
+
+---
+
+## 10. Development, Security, & Performance Rules
+
+### Data Volume
+- Seeding targets must generate at least 1,000 applicants, 1,000 reviewers, and 10,000 projects for testing under load.
+- Password hashing must be pre-calculated once during seeding to prevent CPU execution timeouts.
+
+### Security
+- Never expose passwords or API tokens in network requests or console outputs.
+- Private uploaded files require authentication check via Laravel Policies before download.
+- Filenames in storage must be hashed using UUIDs to prevent directory listing and path traversal.
+
+### Performance
+- Always use cursor pagination (`cursorPaginate()`) instead of offset-based pagination (`paginate()`) for large catalogs (10,000+ rows).
+- Cache heavy queries (e.g. dashboard statistics) with a TTL (e.g. 300 seconds) and bust cache immediately upon state changes.
+- Stream large exports (e.g. CSV) using `response()->stream()` and `cursor()` to prevent memory exhaustion (OOM).
+- Dispatch heavy tasks (e.g. file analysis or notification) to background queue workers (`ShouldQueue`).
+
+### Testing
+- Major functionalities (Auth, RBAC, State Transition, File Upload, CSV Export) must have comprehensive functional/feature tests.
+
+### Deployment
+- Never execute destructive database actions (`php artisan migrate:fresh`) on production environments. Use standard migrations instead.

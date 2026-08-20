@@ -118,4 +118,12 @@ class ProjectPolicy
     {
         return $user->hasRole('reviewer') && $project->status === 'under_review';
     }
+
+    /**
+     * Determine whether the user can export projects.
+     */
+    public function export(User $user): bool
+    {
+        return $user->hasRole('reviewer');
+    }
 }
