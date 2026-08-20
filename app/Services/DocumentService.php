@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services;
 
+use App\Jobs\ProcessDocumentJob;
 use App\Models\Document;
 use App\Models\Project;
 use Illuminate\Http\Testing\File;
@@ -55,7 +56,7 @@ class DocumentService
         $privatePath = $file->storeAs('private/documents', $uuidFilename);
 
         // 4. Create document record in database
-        return Document::create([
+        $document = Document::create([
             'project_id' => $project->id,
             'filename' => $uuidFilename,
             'original_name' => $file->getClientOriginalName(),
@@ -63,6 +64,11 @@ class DocumentService
             'file_size' => $file->getSize(),
             'mime_type' => $actualMime,
         ]);
+
+        // 5. Dispatch background queue processing job
+        ProcessDocumentJob::dispatch($document);
+
+        return $document;
     }
 
     /**
