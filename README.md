@@ -1,6 +1,6 @@
 # Government Document Eligibility System - DLH
 
-Sistem Pendokumentasian Permohonan Dokumen Kelayakan Lingkungan Hidup Dinas Lingkungan Hidup (DLH).
+Sistem Pendokumentasian Permohonan Dokumen Kelayakan pada Lingkungan Hidup di Dinas Lingkungan Hidup (DLH).
 
 Project ini merupakan prototype sistem pengajuan kelayakan dokumen berskala enterprise, aman, dan berkinerja tinggi.
 
